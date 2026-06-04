@@ -1,38 +1,20 @@
+import pandas as pd
 import streamlit as st
-import plotly.express as px
 
-from utils.data_loader import load_data
+@st.cache_data
+def load_data():
+    df = pd.read_csv("data/company_data.csv")
 
-st.title("🌍 Country Analysis")
-
-df = load_data()
-
-country_df = (
-    df.groupby("headquarter")
-    .agg(
-        Total_Market_Cap=("market_cap", "sum"),
-        Companies=("company_name", "count")
+    df["market_cap"] = (
+        df["market cap(Billion USD)"]
+        .astype(str)
+        .str.replace(",", "")
+        .astype(float)
     )
-    .reset_index()
-)
 
-country_df = country_df.sort_values(
-    "Total_Market_Cap",
-    ascending=False
-)
+    df["world_rank"] = pd.to_numeric(
+        df["world_rank"],
+        errors="coerce"
+    )
 
-st.dataframe(country_df)
-
-fig = px.scatter(
-    country_df,
-    x="Companies",
-    y="Total_Market_Cap",
-    size="Total_Market_Cap",
-    color="headquarter",
-    title="Country Market Cap Analysis"
-)
-
-st.plotly_chart(
-    fig,
-    use_container_width=True
-)
+    return df
